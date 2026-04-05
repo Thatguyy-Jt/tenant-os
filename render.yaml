@@ -1,0 +1,9 @@
+# Render Blueprint — set Root Directory to `backend` for this API.
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: tenantos-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
