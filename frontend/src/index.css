@@ -1,0 +1,113 @@
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --font-heading: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* tenant-os (GitHub) design tokens — dark shell + teal primary */
+:root {
+  --background: 216 28% 7%;
+  --foreground: 210 40% 98%;
+
+  --card: 215 25% 12%;
+  --card-foreground: 210 40% 98%;
+
+  --popover: 215 25% 12%;
+  --popover-foreground: 210 40% 98%;
+
+  --primary: 162 72% 46%;
+  --primary-foreground: 216 28% 7%;
+
+  --secondary: 215 20% 18%;
+  --secondary-foreground: 210 40% 98%;
+
+  --muted: 215 20% 18%;
+  --muted-foreground: 215 15% 55%;
+
+  --accent: 162 72% 46%;
+  --accent-foreground: 216 28% 7%;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --border: 215 20% 20%;
+  --input: 215 20% 20%;
+  --ring: 162 72% 46%;
+
+  --radius: 0.75rem;
+
+  --hero-overlay: linear-gradient(
+    135deg,
+    hsla(216, 28%, 7%, 0.92) 0%,
+    hsla(216, 28%, 7%, 0.7) 100%
+  );
+  --gradient-accent: linear-gradient(135deg, hsl(162, 72%, 46%), hsl(172, 66%, 50%));
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased font-body;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-accent);
+  }
+
+  .glass-card {
+    @apply border border-border/50 bg-card/60 backdrop-blur-xl;
+  }
+}
+
+@layer components {
+  .container {
+    @apply mx-auto w-full max-w-[1400px] px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Skip link: visible on keyboard focus (WCAG 2.4.1) */
+  .skip-link {
+    @apply fixed left-4 top-4 z-[100] -translate-y-[120%] rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-lg outline-none ring-2 ring-ring transition-transform focus:translate-y-0 focus-visible:translate-y-0;
+  }
+}
