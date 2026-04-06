@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, formatMoney } from "@/lib/format";
-import { fieldClass, labelClass } from "@/lib/staffUi";
 
 export function TenantHomePage() {
   const qc = useQueryClient();
@@ -82,6 +81,18 @@ export function TenantHomePage() {
       cancelled = true;
     };
   }, [paystackReturnRef, qc, setSearchParams]);
+
+  const paystackAmountNgn = useMemo(() => {
+    const ld = leaseQuery.data;
+    const bal = balanceQuery.data;
+    if (!ld || !bal) return null;
+    const { lease } = ld;
+    const owed = bal.balance > 0 ? bal.balance : lease.rentAmount;
+    const n = Math.max(1, Math.round(owed * 100) / 100);
+    return Number.isFinite(n) ? n : null;
+  }, [leaseQuery.data, balanceQuery.data]);
+
+  const paystackCurrencyOk = leaseQuery.data?.lease.currency === "NGN";
 
   if (leaseQuery.isLoading) {
     return <p className="text-muted-foreground">Loading your lease…</p>;
@@ -170,42 +181,42 @@ export function TenantHomePage() {
         <CardHeader>
           <CardTitle className="text-lg">Pay with Paystack</CardTitle>
           <CardDescription>
-            Pay in NGN on Paystack, then you’ll land back here while we confirm the payment (required when your API
-            URL isn’t reachable by Paystack webhooks, e.g. localhost).
+            Uses your outstanding balance when you owe rent; otherwise one {lease.billingFrequency} payment at the
+            amount on your lease. You’ll return here afterward to confirm (needed if webhooks can’t reach the API).
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form
-            className="flex max-w-xs flex-col gap-3 sm:flex-row sm:items-end"
-            onSubmit={(e) => {
-              e.preventDefault();
-              const fd = new FormData(e.currentTarget);
-              const n = Number(fd.get("amountNgn"));
-              if (Number.isNaN(n) || n < 1) return;
-              payMut.mutate(n);
-            }}
-          >
-            <div className="flex-1">
-              <label htmlFor="pay-amt" className={labelClass}>
-                Amount (NGN)
-              </label>
-              <input
-                id="pay-amt"
-                name="amountNgn"
-                type="number"
-                min={1}
-                step="0.01"
-                required
-                className={fieldClass}
-                placeholder="e.g. 50000"
-              />
-            </div>
-            <Button type="submit" disabled={payMut.isPending}>
-              {payMut.isPending ? "Redirecting…" : "Continue to Paystack"}
-            </Button>
-          </form>
+        <CardContent className="space-y-4">
+          {!paystackCurrencyOk ? (
+            <p className="text-sm text-muted-foreground">
+              Online Paystack checkout is set up for <span className="font-medium text-foreground">NGN</span> only.
+              This lease is in {lease.currency}. Contact your landlord for payment options.
+            </p>
+          ) : balanceQuery.isLoading || paystackAmountNgn == null ? (
+            <p className="text-sm text-muted-foreground">Calculating amount…</p>
+          ) : (
+            <>
+              <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Amount to pay</p>
+                <p className="mt-1 font-heading text-2xl font-semibold tabular-nums text-foreground">
+                  {formatMoney(paystackAmountNgn, lease.currency)}
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {balance && balance.balance > 0
+                    ? "Outstanding balance through today."
+                    : "No balance due right now — paying one scheduled rent installment ahead."}
+                </p>
+              </div>
+              <Button
+                type="button"
+                disabled={payMut.isPending}
+                onClick={() => payMut.mutate(paystackAmountNgn)}
+              >
+                {payMut.isPending ? "Redirecting…" : `Pay ${formatMoney(paystackAmountNgn, lease.currency)} on Paystack`}
+              </Button>
+            </>
+          )}
           {payMut.isError ? (
-            <p className="mt-2 text-sm text-destructive">
+            <p className="text-sm text-destructive">
               {payMut.error instanceof ApiError ? payMut.error.message : "Payment setup failed."}
             </p>
           ) : null}
