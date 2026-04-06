@@ -82,15 +82,13 @@ export function TenantHomePage() {
     };
   }, [paystackReturnRef, qc, setSearchParams]);
 
+  /** Only when something is owed — after payment, balance hits 0 and Paystack UI is hidden. */
   const paystackAmountNgn = useMemo(() => {
-    const ld = leaseQuery.data;
     const bal = balanceQuery.data;
-    if (!ld || !bal) return null;
-    const { lease } = ld;
-    const owed = bal.balance > 0 ? bal.balance : lease.rentAmount;
-    const n = Math.max(1, Math.round(owed * 100) / 100);
+    if (!bal || bal.balance <= 0) return null;
+    const n = Math.max(1, Math.round(bal.balance * 100) / 100);
     return Number.isFinite(n) ? n : null;
-  }, [leaseQuery.data, balanceQuery.data]);
+  }, [balanceQuery.data]);
 
   const paystackCurrencyOk = leaseQuery.data?.lease.currency === "NGN";
 
@@ -117,6 +115,7 @@ export function TenantHomePage() {
 
   const { lease, unit, property } = leaseQuery.data!;
   const balance = balanceQuery.data;
+  const owesRent = Boolean(balance && balance.balance > 0);
 
   return (
     <div className="space-y-8">
@@ -177,34 +176,22 @@ export function TenantHomePage() {
         </p>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Pay with Paystack</CardTitle>
-          <CardDescription>
-            Uses your outstanding balance when you owe rent; otherwise one {lease.billingFrequency} payment at the
-            amount on your lease. You’ll return here afterward to confirm (needed if webhooks can’t reach the API).
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!paystackCurrencyOk ? (
-            <p className="text-sm text-muted-foreground">
-              Online Paystack checkout is set up for <span className="font-medium text-foreground">NGN</span> only.
-              This lease is in {lease.currency}. Contact your landlord for payment options.
-            </p>
-          ) : balanceQuery.isLoading || paystackAmountNgn == null ? (
-            <p className="text-sm text-muted-foreground">Calculating amount…</p>
-          ) : (
-            <>
+      {owesRent && !balanceQuery.isLoading ? (
+        paystackCurrencyOk && paystackAmountNgn != null ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Pay with Paystack</CardTitle>
+              <CardDescription>
+                You’ll return here after paying so we can confirm (needed if webhooks can’t reach the API).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
               <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Amount to pay</p>
                 <p className="mt-1 font-heading text-2xl font-semibold tabular-nums text-foreground">
                   {formatMoney(paystackAmountNgn, lease.currency)}
                 </p>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {balance && balance.balance > 0
-                    ? "Outstanding balance through today."
-                    : "No balance due right now — paying one scheduled rent installment ahead."}
-                </p>
+                <p className="mt-2 text-xs text-muted-foreground">Outstanding balance through today.</p>
               </div>
               <Button
                 type="button"
@@ -213,15 +200,25 @@ export function TenantHomePage() {
               >
                 {payMut.isPending ? "Redirecting…" : `Pay ${formatMoney(paystackAmountNgn, lease.currency)} on Paystack`}
               </Button>
-            </>
-          )}
-          {payMut.isError ? (
-            <p className="text-sm text-destructive">
-              {payMut.error instanceof ApiError ? payMut.error.message : "Payment setup failed."}
-            </p>
-          ) : null}
-        </CardContent>
-      </Card>
+              {payMut.isError ? (
+                <p className="text-sm text-destructive">
+                  {payMut.error instanceof ApiError ? payMut.error.message : "Payment setup failed."}
+                </p>
+              ) : null}
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Pay rent</CardTitle>
+              <CardDescription>
+                Online checkout here is for <span className="font-medium text-foreground">NGN</span> only. This lease is
+                in {lease.currency}. Contact your landlord to pay your outstanding balance.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        )
+      ) : null}
 
       {(property.photos?.length ?? 0) > 0 ? (
         <section>
