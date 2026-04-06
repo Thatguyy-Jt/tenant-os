@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -15,7 +16,7 @@ import {
   persistSession,
 } from "@/api/authApi";
 import type { AuthUser, LoginResponse, OrganizationSummary } from "@/api/types";
-import { getAccessToken } from "@/api/tokens";
+import { ACCESS_TOKEN_STORAGE_KEY, getAccessToken } from "@/api/tokens";
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -33,20 +34,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [organization, setOrganization] = useState<OrganizationSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  /** Bumps when tokens change so in-flight `fetchMe` from an older session cannot overwrite state. */
+  const sessionEpochRef = useRef(0);
 
   const refreshSession = useCallback(async () => {
+    const epochAtStart = sessionEpochRef.current;
     if (!getAccessToken()) {
+      if (epochAtStart !== sessionEpochRef.current) return;
       setUser(null);
       setOrganization(null);
       return;
     }
     const data = await fetchMe();
+    if (epochAtStart !== sessionEpochRef.current) return;
     setUser(data.user);
     setOrganization(data.organization);
   }, []);
 
   useEffect(() => {
     let cancelled = false;
+    const epochAtStart = sessionEpochRef.current;
     (async () => {
       if (!getAccessToken()) {
         if (!cancelled) setLoading(false);
@@ -54,15 +61,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       try {
         const data = await fetchMe();
-        if (!cancelled) {
-          setUser(data.user);
-          setOrganization(data.organization);
-        }
+        if (cancelled) return;
+        if (epochAtStart !== sessionEpochRef.current) return;
+        setUser(data.user);
+        setOrganization(data.organization);
       } catch {
-        if (!cancelled) {
-          setUser(null);
-          setOrganization(null);
-        }
+        if (cancelled) return;
+        if (epochAtStart !== sessionEpochRef.current) return;
+        setUser(null);
+        setOrganization(null);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -72,8 +79,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.storageArea !== localStorage || e.key !== ACCESS_TOKEN_STORAGE_KEY) return;
+      sessionEpochRef.current += 1;
+      const epochAtStart = sessionEpochRef.current;
+      void (async () => {
+        if (e.newValue === null) {
+          setUser(null);
+          setOrganization(null);
+          return;
+        }
+        try {
+          const data = await fetchMe();
+          if (epochAtStart !== sessionEpochRef.current) return;
+          setUser(data.user);
+          setOrganization(data.organization);
+        } catch {
+          if (epochAtStart !== sessionEpochRef.current) return;
+          setUser(null);
+          setOrganization(null);
+        }
+      })();
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
     const data = await loginRequest(email, password);
+    sessionEpochRef.current += 1;
     persistSession(data);
     const me = await fetchMe();
     setUser(me.user);
@@ -82,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setSessionFromAuthResponse = useCallback(async (data: LoginResponse) => {
+    sessionEpochRef.current += 1;
     persistSession(data);
     const me = await fetchMe();
     setUser(me.user);
@@ -90,6 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
+    sessionEpochRef.current += 1;
     await logoutRequest();
     setUser(null);
     setOrganization(null);

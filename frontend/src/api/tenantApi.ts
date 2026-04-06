@@ -82,6 +82,17 @@ export async function initializePaystackPayment(amountNgn: number): Promise<Pays
   });
 }
 
+/** Call after returning from Paystack so rent is saved when the webhook cannot reach your API (e.g. local dev). */
+export async function verifyPaystackPayment(reference: string): Promise<{
+  payment: RentPaymentDto;
+  alreadyRecorded: boolean;
+}> {
+  return apiJson<{ payment: RentPaymentDto; alreadyRecorded: boolean }>("/tenant/paystack/verify", {
+    method: "POST",
+    body: JSON.stringify({ reference }),
+  });
+}
+
 export async function downloadRentReceiptPdf(paymentId: string): Promise<Blob> {
   const res = await apiFetch(`/rent-payments/${paymentId}/receipt`);
   if (!res.ok) {

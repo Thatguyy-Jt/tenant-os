@@ -1,7 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import { ApiError } from "@/api/client";
-import { getTenantBalance, getTenantLease, initializePaystackPayment } from "@/api/tenantApi";
+import {
+  getTenantBalance,
+  getTenantLease,
+  initializePaystackPayment,
+  verifyPaystackPayment,
+} from "@/api/tenantApi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, formatMoney } from "@/lib/format";
@@ -9,6 +16,12 @@ import { fieldClass, labelClass } from "@/lib/staffUi";
 
 export function TenantHomePage() {
   const qc = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [paystackVerifyMessage, setPaystackVerifyMessage] = useState<string | null>(null);
+  const paystackReturnRef = useMemo(
+    () => searchParams.get("reference") ?? searchParams.get("trxref"),
+    [searchParams]
+  );
 
   const leaseQuery = useQuery({
     queryKey: ["tenant", "lease"],
@@ -28,6 +41,47 @@ export function TenantHomePage() {
       window.location.href = data.authorizationUrl;
     },
   });
+
+  useEffect(() => {
+    if (!paystackReturnRef) return;
+
+    let cancelled = false;
+    setPaystackVerifyMessage(null);
+
+    void (async () => {
+      try {
+        await verifyPaystackPayment(paystackReturnRef);
+        if (!cancelled) {
+          await qc.invalidateQueries({ queryKey: ["tenant"] });
+          setPaystackVerifyMessage("Payment recorded. Your balance and payment history are updated.");
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setPaystackVerifyMessage(
+            e instanceof ApiError
+              ? e.message
+              : "Could not confirm payment with the server. If money left your account, use Refresh or contact support."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setSearchParams(
+            (prev) => {
+              const next = new URLSearchParams(prev);
+              next.delete("reference");
+              next.delete("trxref");
+              return next;
+            },
+            { replace: true }
+          );
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [paystackReturnRef, qc, setSearchParams]);
 
   if (leaseQuery.isLoading) {
     return <p className="text-muted-foreground">Loading your lease…</p>;
@@ -100,11 +154,24 @@ export function TenantHomePage() {
         ) : null}
       </div>
 
+      {paystackVerifyMessage ? (
+        <p
+          className={`rounded-md border px-3 py-2 text-sm ${
+            paystackVerifyMessage.startsWith("Payment recorded")
+              ? "border-border bg-muted/40 text-foreground"
+              : "border-destructive/50 bg-destructive/10 text-destructive"
+          }`}
+        >
+          {paystackVerifyMessage}
+        </p>
+      ) : null}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Pay with Paystack</CardTitle>
           <CardDescription>
-            You’ll be redirected to complete payment in NGN. Ensure Paystack is configured on the server.
+            Pay in NGN on Paystack, then you’ll land back here while we confirm the payment (required when your API
+            URL isn’t reachable by Paystack webhooks, e.g. localhost).
           </CardDescription>
         </CardHeader>
         <CardContent>

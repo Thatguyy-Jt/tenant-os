@@ -1,5 +1,6 @@
 import { Router } from "express";
 import multer from "multer";
+import mongoose from "mongoose";
 import { z } from "zod";
 import { Lease } from "../models/Lease";
 import { User } from "../models/User";
@@ -23,7 +24,11 @@ import {
 } from "../utils/serializers";
 import { computeBalance, computeExpectedRentThrough, sumPayments } from "../services/rent";
 import { loadEnv } from "../config/env";
-import { paystackInitialize } from "../services/paystackApi";
+import { paystackInitialize, paystackVerifyTransaction } from "../services/paystackApi";
+import {
+  extractPaystackLeaseMetadata,
+  recordPaystackRentPaymentIfNew,
+} from "../services/paystackRentPayment";
 import { uploadLeaseDocument } from "../services/cloudinaryUpload";
 
 const balanceQuerySchema = z.object({
@@ -39,6 +44,10 @@ const createMaintenanceSchema = z.object({
 
 const paystackInitSchema = z.object({
   amountNgn: z.number().positive(),
+});
+
+const paystackVerifySchema = z.object({
+  reference: z.string().min(1),
 });
 
 const upload = multer({
@@ -268,6 +277,8 @@ tenantRouter.post(
       throw httpError(400, "Minimum payment is 1.00 in lease currency", "AMOUNT_TOO_SMALL");
     }
 
+    const publicBase = env.APP_PUBLIC_URL.replace(/\/$/, "");
+
     const result = await paystackInitialize({
       email,
       amountKobo,
@@ -275,12 +286,99 @@ tenantRouter.post(
         lease_id: lease._id.toString(),
         organization_id: orgId.toString(),
       },
+      callbackUrl: `${publicBase}/tenant`,
     });
 
     res.status(201).json({
       authorizationUrl: result.authorizationUrl,
       reference: result.reference,
       accessCode: result.accessCode,
+    });
+  })
+);
+
+/** After Paystack redirect, client calls this so rent is recorded when webhooks cannot reach the server (e.g. localhost). */
+tenantRouter.post(
+  "/paystack/verify",
+  asyncHandler(async (req, res) => {
+    const body = paystackVerifySchema.parse(req.body);
+    const env = loadEnv();
+    if (!env.PAYSTACK_SECRET_KEY) {
+      throw httpError(503, "Paystack is not configured", "PAYSTACK_DISABLED");
+    }
+
+    const orgId = requireObjectId(req.auth!.organizationId, "organizationId");
+    const userId = requireObjectId(req.auth!.userId, "userId");
+
+    const existingFirst = await RentPayment.findOne({ paystackReference: body.reference }).lean();
+    if (existingFirst) {
+      const lease = await Lease.findById(existingFirst.leaseId).lean();
+      if (
+        !lease ||
+        String(lease.organizationId) !== String(orgId) ||
+        String(lease.tenantUserId) !== String(userId)
+      ) {
+        throw httpError(403, "Not allowed to view this payment", "FORBIDDEN");
+      }
+      res.json({
+        payment: serializeRentPayment(existingFirst as Record<string, unknown>),
+        alreadyRecorded: true,
+      });
+      return;
+    }
+
+    let verified;
+    try {
+      verified = await paystackVerifyTransaction(body.reference);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Could not verify payment with Paystack";
+      throw httpError(400, msg, "VERIFY_FAILED");
+    }
+    if (verified.gatewayStatus !== "success") {
+      throw httpError(400, "Payment was not successful", "PAYMENT_NOT_SUCCESS");
+    }
+
+    const { leaseIdStr, orgIdStr } = extractPaystackLeaseMetadata(verified.metadata);
+    if (!leaseIdStr || !orgIdStr) {
+      throw httpError(400, "Payment is missing lease metadata", "MISSING_METADATA");
+    }
+
+    const lease = await Lease.findOne({
+      _id: new mongoose.Types.ObjectId(leaseIdStr),
+      organizationId: new mongoose.Types.ObjectId(orgIdStr),
+    }).lean();
+
+    if (!lease) {
+      throw httpError(404, "Lease not found for this payment", "LEASE_NOT_FOUND");
+    }
+
+    if (String(lease.tenantUserId) !== String(userId) || String(lease.organizationId) !== String(orgId)) {
+      throw httpError(403, "This payment is not for your account", "FORBIDDEN");
+    }
+
+    const result = await recordPaystackRentPaymentIfNew({
+      reference: verified.reference,
+      amountKobo: verified.amountKobo,
+      currency: verified.currency,
+      paidAt: verified.paidAt,
+      metadata: verified.metadata,
+    });
+
+    if (result.kind === "error") {
+      if (result.code === "currency_mismatch") {
+        throw httpError(400, "Currency does not match this lease", "CURRENCY_MISMATCH");
+      }
+      throw httpError(400, "Could not record payment", "RECORD_FAILED");
+    }
+
+    const payment = await RentPayment.findOne({ paystackReference: body.reference }).lean();
+    if (!payment) {
+      throw httpError(500, "Payment record missing after verify", "INTERNAL");
+    }
+
+    res.json({
+      payment: serializeRentPayment(payment as Record<string, unknown>),
+      alreadyRecorded: result.kind === "duplicate",
     });
   })
 );

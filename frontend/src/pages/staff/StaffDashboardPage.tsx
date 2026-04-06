@@ -84,8 +84,9 @@ export function StaffDashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground">
-              {new Date(s.revenue.from).toLocaleDateString()} —{" "}
-              {new Date(s.revenue.to).toLocaleDateString()}
+              Sum of recorded rent payments whose <span className="text-foreground">paid date</span> falls in this
+              window (last 30 days by default).{" "}
+              {new Date(s.revenue.from).toLocaleDateString()} — {new Date(s.revenue.to).toLocaleDateString()}
             </CardContent>
           </Card>
           <Card>
@@ -104,7 +105,10 @@ export function StaffDashboardPage() {
                 {formatMoney(s.overdue.totalOutstanding, currency)}
               </CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">Across active leases</CardContent>
+            <CardContent className="text-sm text-muted-foreground">
+              Rent accrued to today (from each lease start and billing frequency) minus payments recorded. New leases
+              with a future start date show no accrued rent until the term begins.
+            </CardContent>
           </Card>
         </div>
       ) : null}

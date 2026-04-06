@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 
 import { ApiError } from "@/api/client";
@@ -18,9 +18,7 @@ export function LoginPage() {
   const [pending, setPending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  if (user) {
-    return <Navigate to={user.role === "tenant" ? "/tenant" : "/staff"} replace />;
-  }
+  const dashboardPath = user ? (user.role === "tenant" ? "/tenant" : "/staff") : null;
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +45,21 @@ export function LoginPage() {
           Tenant<span className="text-primary">OS</span>
         </Link>
         <h1 className="font-heading text-2xl font-semibold">Log in</h1>
+        {user ? (
+          <div className="mt-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+            <p>
+              Signed in as <span className="font-medium text-foreground">{user.email}</span>.{" "}
+              {dashboardPath ? (
+                <Link to={dashboardPath} className="text-primary underline-offset-4 hover:underline">
+                  Open dashboard
+                </Link>
+              ) : null}
+            </p>
+            <p className="mt-1 text-xs">
+              Signing in with a different email below switches the account in this browser (all tabs).
+            </p>
+          </div>
+        ) : null}
         <p className="mt-2 text-sm text-muted-foreground">
           Use your TenantOS account. New organization?{" "}
           <Link to="/register" className="text-primary underline-offset-4 hover:underline">

@@ -11,6 +11,11 @@ node_modules
 dist
 dist-ssr
 
+# Local env (use .env.example)
+.env
+.env.local
+.env.*.local
+
 # Playwright
 /playwright-report/
 /test-results/
