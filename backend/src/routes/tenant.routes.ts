@@ -310,11 +310,15 @@ tenantRouter.post(
     const orgId = requireObjectId(req.auth!.organizationId, "organizationId");
     const userId = requireObjectId(req.auth!.userId, "userId");
 
-    const existingFirst = await RentPayment.findOne({ paystackReference: body.reference }).lean();
-    if (existingFirst) {
-      const lease = await Lease.findById(existingFirst.leaseId).lean();
+    const existingRaw = await RentPayment.findOne({ paystackReference: body.reference }).lean();
+    if (existingRaw && !Array.isArray(existingRaw)) {
+      const existingFirst = existingRaw as Record<string, unknown>;
+      const leaseRaw = await Lease.findById(existingFirst.leaseId as mongoose.Types.ObjectId).lean();
+      if (!leaseRaw || Array.isArray(leaseRaw)) {
+        throw httpError(403, "Not allowed to view this payment", "FORBIDDEN");
+      }
+      const lease = leaseRaw as Record<string, unknown>;
       if (
-        !lease ||
         String(lease.organizationId) !== String(orgId) ||
         String(lease.tenantUserId) !== String(userId)
       ) {
@@ -343,15 +347,16 @@ tenantRouter.post(
       throw httpError(400, "Payment is missing lease metadata", "MISSING_METADATA");
     }
 
-    const lease = await Lease.findOne({
+    const leaseRaw = await Lease.findOne({
       _id: new mongoose.Types.ObjectId(leaseIdStr),
       organizationId: new mongoose.Types.ObjectId(orgIdStr),
     }).lean();
 
-    if (!lease) {
+    if (!leaseRaw || Array.isArray(leaseRaw)) {
       throw httpError(404, "Lease not found for this payment", "LEASE_NOT_FOUND");
     }
 
+    const lease = leaseRaw as Record<string, unknown>;
     if (String(lease.tenantUserId) !== String(userId) || String(lease.organizationId) !== String(orgId)) {
       throw httpError(403, "This payment is not for your account", "FORBIDDEN");
     }
@@ -371,13 +376,13 @@ tenantRouter.post(
       throw httpError(400, "Could not record payment", "RECORD_FAILED");
     }
 
-    const payment = await RentPayment.findOne({ paystackReference: body.reference }).lean();
-    if (!payment) {
+    const paymentRaw = await RentPayment.findOne({ paystackReference: body.reference }).lean();
+    if (!paymentRaw || Array.isArray(paymentRaw)) {
       throw httpError(500, "Payment record missing after verify", "INTERNAL");
     }
 
     res.json({
-      payment: serializeRentPayment(payment as Record<string, unknown>),
+      payment: serializeRentPayment(paymentRaw as Record<string, unknown>),
       alreadyRecorded: result.kind === "duplicate",
     });
   })
