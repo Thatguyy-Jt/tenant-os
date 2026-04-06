@@ -269,18 +269,28 @@ invitationsRouter.post(
     const base = env.APP_PUBLIC_URL.replace(/\/$/, "");
     const inviteUrl = `${base}/tenant/accept?token=${encodeURIComponent(plainToken)}`;
 
-    await sendTenantInvitationEmail({
-      to: emailNorm,
-      inviteUrl,
-      organizationName: orgName,
-      unitLabel: unit.label,
-    });
+    let message: string;
+    try {
+      await sendTenantInvitationEmail({
+        to: emailNorm,
+        inviteUrl,
+        organizationName: orgName,
+        unitLabel: unit.label,
+      });
+      message = env.SMTP_HOST
+        ? "Invitation email sent."
+        : "Invitation created; email was not sent (configure SMTP_HOST). Check server logs for the invite link.";
+    } catch (err) {
+      console.error("[invitations] Email send failed after invitation was saved:", err);
+      console.info(`[invitations] Manual invite link for ${emailNorm}: ${inviteUrl}`);
+      message = env.SMTP_HOST
+        ? "Invitation created, but email could not be delivered (SMTP error — check host, port, TLS, and firewall). The invite link was logged on the server."
+        : "Invitation created; email was not sent (configure SMTP_HOST). Check server logs for the invite link.";
+    }
 
     res.status(201).json({
       invitation: serializeInvitation(invitation.toObject() as Record<string, unknown>),
-      message: env.SMTP_HOST
-        ? "Invitation email sent."
-        : "Invitation created; email was not sent (configure SMTP_HOST). Check server logs for the invite link.",
+      message,
     });
   })
 );

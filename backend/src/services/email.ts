@@ -1,5 +1,22 @@
 import nodemailer from "nodemailer";
+import type { Transporter } from "nodemailer";
 import { loadEnv } from "../config/env";
+import type { Env } from "../config/env";
+
+function createSmtpTransport(env: Env): Transporter {
+  return nodemailer.createTransport({
+    host: env.SMTP_HOST!,
+    port: env.SMTP_PORT,
+    secure: env.SMTP_SECURE,
+    auth:
+      env.SMTP_USER && env.SMTP_PASS
+        ? { user: env.SMTP_USER, pass: env.SMTP_PASS }
+        : undefined,
+    connectionTimeout: 20_000,
+    greetingTimeout: 15_000,
+    socketTimeout: 25_000,
+  });
+}
 
 export type TenantInviteEmailInput = {
   to: string;
@@ -40,15 +57,7 @@ export async function sendTenantInvitationEmail(input: TenantInviteEmailInput): 
     return;
   }
 
-  const transporter = nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_SECURE,
-    auth:
-      env.SMTP_USER && env.SMTP_PASS
-        ? { user: env.SMTP_USER, pass: env.SMTP_PASS }
-        : undefined,
-  });
+  const transporter = createSmtpTransport(env);
 
   await transporter.sendMail({
     from: env.EMAIL_FROM,
@@ -88,15 +97,7 @@ export async function sendRentReminderEmail(input: RentReminderEmailInput): Prom
     return;
   }
 
-  const transporter = nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_SECURE,
-    auth:
-      env.SMTP_USER && env.SMTP_PASS
-        ? { user: env.SMTP_USER, pass: env.SMTP_PASS }
-        : undefined,
-  });
+  const transporter = createSmtpTransport(env);
 
   await transporter.sendMail({
     from: env.EMAIL_FROM,
@@ -136,15 +137,7 @@ export async function sendEmailVerificationEmail(input: EmailVerificationInput):
     return;
   }
 
-  const transporter = nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_SECURE,
-    auth:
-      env.SMTP_USER && env.SMTP_PASS
-        ? { user: env.SMTP_USER, pass: env.SMTP_PASS }
-        : undefined,
-  });
+  const transporter = createSmtpTransport(env);
 
   await transporter.sendMail({
     from: env.EMAIL_FROM,
@@ -184,15 +177,7 @@ export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Pr
     return;
   }
 
-  const transporter = nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    secure: env.SMTP_SECURE,
-    auth:
-      env.SMTP_USER && env.SMTP_PASS
-        ? { user: env.SMTP_USER, pass: env.SMTP_PASS }
-        : undefined,
-  });
+  const transporter = createSmtpTransport(env);
 
   await transporter.sendMail({
     from: env.EMAIL_FROM,
