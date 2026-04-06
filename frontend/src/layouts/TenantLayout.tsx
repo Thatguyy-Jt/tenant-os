@@ -13,7 +13,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   );
 
 export function TenantLayout() {
-  const { user, organization, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -23,9 +23,6 @@ export function TenantLayout() {
             <Link to="/tenant" className="font-heading text-lg font-semibold">
               TenantOS
             </Link>
-            {organization ? (
-              <span className="text-sm text-muted-foreground">{organization.name}</span>
-            ) : null}
             <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
               Tenant
             </span>

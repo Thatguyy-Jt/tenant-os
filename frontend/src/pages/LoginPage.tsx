@@ -41,6 +41,11 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background px-4 text-foreground">
       <main id="main-content" className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-16" tabIndex={-1}>
+        <div className="mb-6 flex justify-center">
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/">Back to landing</Link>
+          </Button>
+        </div>
         <Link to="/" className="mb-8 text-center font-heading text-xl font-bold">
           Tenant<span className="text-primary">OS</span>
         </Link>

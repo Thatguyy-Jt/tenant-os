@@ -31,11 +31,8 @@ export function StaffLayout() {
         <div className="container flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2">
             <Link to="/staff" className="font-heading text-lg font-semibold">
-              TenantOS
+              {organization?.name ?? "TenantOS"}
             </Link>
-            {organization ? (
-              <span className="text-sm text-muted-foreground">{organization.name}</span>
-            ) : null}
             {user?.role === "agent" ? (
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
                 Agent

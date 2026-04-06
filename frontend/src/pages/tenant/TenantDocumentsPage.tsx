@@ -48,16 +48,16 @@ export function TenantDocumentsPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
+    <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-8">
+      <header className="w-full text-center">
         <h1 className="font-heading text-2xl font-bold">Documents</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Files shared on your lease. Uploads require Cloudinary on the server.
         </p>
-      </div>
+      </header>
 
       <form
-        className="max-w-xl space-y-3 rounded-2xl border border-border bg-card p-6 shadow-sm"
+        className="w-full max-w-xl space-y-3 rounded-2xl border border-border bg-card p-6 shadow-sm"
         onSubmit={(e) => {
           e.preventDefault();
           const fd = new FormData(e.currentTarget);
@@ -92,14 +92,14 @@ export function TenantDocumentsPage() {
         </Button>
       </form>
 
-      <div>
-        <h2 className="font-heading text-lg font-semibold">Your documents</h2>
+      <div className="w-full max-w-xl">
+        <h2 className="text-center font-heading text-lg font-semibold">Your documents</h2>
         {docsQuery.isLoading ? (
-          <p className="mt-2 text-muted-foreground">Loading…</p>
+          <p className="mt-2 text-center text-muted-foreground">Loading…</p>
         ) : docsQuery.isError ? (
-          <p className="mt-2 text-destructive">Could not load documents.</p>
+          <p className="mt-2 text-center text-destructive">Could not load documents.</p>
         ) : !docsQuery.data?.length ? (
-          <p className="mt-2 text-muted-foreground">No documents yet.</p>
+          <p className="mt-2 text-center text-muted-foreground">No documents yet.</p>
         ) : (
           <ul className="mt-4 divide-y divide-border rounded-2xl border border-border">
             {docsQuery.data.map((d) => (

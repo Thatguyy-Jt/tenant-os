@@ -46,14 +46,14 @@ export function TenantMaintenancePage() {
   }
 
   return (
-    <div className="space-y-10">
-      <div>
+    <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-10">
+      <header className="w-full text-center">
         <h1 className="font-heading text-2xl font-bold">Maintenance</h1>
         <p className="mt-1 text-sm text-muted-foreground">Report issues for your unit. Staff will update the status.</p>
-      </div>
+      </header>
 
       <form
-        className="max-w-xl space-y-3 rounded-2xl border border-border bg-card p-6 shadow-sm"
+        className="w-full max-w-xl space-y-3 rounded-2xl border border-border bg-card p-6 shadow-sm"
         onSubmit={(e) => {
           e.preventDefault();
           const fd = new FormData(e.currentTarget);
@@ -98,14 +98,14 @@ export function TenantMaintenancePage() {
         </Button>
       </form>
 
-      <div>
-        <h2 className="font-heading text-lg font-semibold">Your requests</h2>
+      <div className="w-full max-w-xl">
+        <h2 className="text-center font-heading text-lg font-semibold">Your requests</h2>
         {listQuery.isLoading ? (
-          <p className="mt-2 text-muted-foreground">Loading…</p>
+          <p className="mt-2 text-center text-muted-foreground">Loading…</p>
         ) : listQuery.isError ? (
-          <p className="mt-2 text-destructive">Could not load requests.</p>
+          <p className="mt-2 text-center text-destructive">Could not load requests.</p>
         ) : !listQuery.data?.length ? (
-          <p className="mt-2 text-muted-foreground">No requests yet.</p>
+          <p className="mt-2 text-center text-muted-foreground">No requests yet.</p>
         ) : (
           <ul className="mt-4 divide-y divide-border rounded-2xl border border-border">
             {listQuery.data.map((r) => (
