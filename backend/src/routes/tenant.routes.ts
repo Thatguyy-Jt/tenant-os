@@ -22,7 +22,12 @@ import {
   serializeMaintenanceRequest,
   serializeLeaseDocument,
 } from "../utils/serializers";
-import { computeBalance, computeExpectedRentThrough, sumPayments } from "../services/rent";
+import {
+  computeBalance,
+  computeExpectedRentThrough,
+  normalizeRentBalance,
+  sumPayments,
+} from "../services/rent";
 import { loadEnv } from "../config/env";
 import { paystackInitialize, paystackVerifyTransaction } from "../services/paystackApi";
 import {
@@ -172,7 +177,7 @@ tenantRouter.get(
         amount: Number((p as Record<string, unknown>).amount),
       }))
     );
-    const balance = computeBalance(expectedTotal, totalPaid);
+    const balance = normalizeRentBalance(computeBalance(expectedTotal, totalPaid));
 
     res.json({
       leaseId: String(l._id),

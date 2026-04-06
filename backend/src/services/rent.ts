@@ -55,3 +55,13 @@ export function sumPayments(payments: { amount: number }[]): number {
 export function computeBalance(expectedTotal: number, totalPaid: number): number {
   return Math.round((expectedTotal - totalPaid) * 100) / 100;
 }
+
+/**
+ * Clears tiny positive/negative residuals from float math or Paystack kobo conversion so
+ * "fully paid" tenants are not stuck with ₦0.01 due.
+ */
+export function normalizeRentBalance(balance: number): number {
+  const r = Math.round(balance * 100) / 100;
+  if (r > -0.005 && r < 0.005) return 0;
+  return r;
+}

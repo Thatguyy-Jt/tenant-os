@@ -52,6 +52,7 @@ export function TenantHomePage() {
         await verifyPaystackPayment(paystackReturnRef);
         if (!cancelled) {
           await qc.invalidateQueries({ queryKey: ["tenant"] });
+          await qc.refetchQueries({ queryKey: ["tenant"] });
           setPaystackVerifyMessage("Payment recorded. Your balance and payment history are updated.");
         }
       } catch (e) {
@@ -82,13 +83,17 @@ export function TenantHomePage() {
     };
   }, [paystackReturnRef, qc, setSearchParams]);
 
-  /** Only when something is owed — after payment, balance hits 0 and Paystack UI is hidden. */
+  const roundedBalance = useMemo(() => {
+    const b = balanceQuery.data?.balance;
+    if (b == null || !Number.isFinite(b)) return null;
+    return Math.round(b * 100) / 100;
+  }, [balanceQuery.data?.balance]);
+
+  /** Only when something meaningful is owed — matches API dust snapping & Paystack ₦1 minimum. */
   const paystackAmountNgn = useMemo(() => {
-    const bal = balanceQuery.data;
-    if (!bal || bal.balance <= 0) return null;
-    const n = Math.max(1, Math.round(bal.balance * 100) / 100);
-    return Number.isFinite(n) ? n : null;
-  }, [balanceQuery.data]);
+    if (roundedBalance == null || roundedBalance < 1) return null;
+    return Math.max(1, roundedBalance);
+  }, [roundedBalance]);
 
   const paystackCurrencyOk = leaseQuery.data?.lease.currency === "NGN";
 
@@ -115,7 +120,8 @@ export function TenantHomePage() {
 
   const { lease, unit, property } = leaseQuery.data!;
   const balance = balanceQuery.data;
-  const owesRent = Boolean(balance && balance.balance > 0);
+  const owesRent =
+    roundedBalance != null && roundedBalance > 0 && (paystackCurrencyOk ? roundedBalance >= 1 : true);
 
   return (
     <div className="space-y-8">
