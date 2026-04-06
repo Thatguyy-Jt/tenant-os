@@ -15,7 +15,7 @@ import { requireObjectId } from "../utils/objectId";
 import { generateInviteToken, hashInviteToken } from "../utils/inviteToken";
 import { loadEnv } from "../config/env";
 import { buildAuthResponse } from "../services/authSession";
-import { sendTenantInvitationEmail } from "../services/email";
+import { isEmailConfigured, sendTenantInvitationEmail } from "../services/email";
 import { serializeInvitation, serializeLease } from "../utils/serializers";
 import {
   assertPropertyInStaffScope,
@@ -277,15 +277,15 @@ invitationsRouter.post(
         organizationName: orgName,
         unitLabel: unit.label,
       });
-      message = env.SMTP_HOST
+      message = isEmailConfigured(env)
         ? "Invitation email sent."
-        : "Invitation created; email was not sent (configure SMTP_HOST). Check server logs for the invite link.";
+        : "Invitation created; email was not sent (set RESEND_API_KEY or SMTP_*). Check server logs for the invite link.";
     } catch (err) {
       console.error("[invitations] Email send failed after invitation was saved:", err);
       console.info(`[invitations] Manual invite link for ${emailNorm}: ${inviteUrl}`);
-      message = env.SMTP_HOST
-        ? "Invitation created, but email could not be delivered (SMTP error — check host, port, TLS, and firewall). The invite link was logged on the server."
-        : "Invitation created; email was not sent (configure SMTP_HOST). Check server logs for the invite link.";
+      message = isEmailConfigured(env)
+        ? "Invitation created, but email could not be delivered (check Resend API key / domain or SMTP settings). The invite link was logged on the server."
+        : "Invitation created; email was not sent (set RESEND_API_KEY or SMTP_*). Check server logs for the invite link.";
     }
 
     res.status(201).json({

@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
+import { Resend } from "resend";
 import { loadEnv } from "../config/env";
 import type { Env } from "../config/env";
 
@@ -18,6 +19,45 @@ function createSmtpTransport(env: Env): Transporter {
   });
 }
 
+/** True when outbound email is configured (Resend API or SMTP). */
+export function isEmailConfigured(env: Env): boolean {
+  return Boolean(env.RESEND_API_KEY || env.SMTP_HOST);
+}
+
+async function sendTransactionalEmail(
+  env: Env,
+  opts: { to: string; subject: string; text: string; html: string }
+): Promise<void> {
+  if (env.RESEND_API_KEY) {
+    const resend = new Resend(env.RESEND_API_KEY);
+    const { error } = await resend.emails.send({
+      from: env.EMAIL_FROM,
+      to: opts.to,
+      subject: opts.subject,
+      html: opts.html,
+      text: opts.text,
+    });
+    if (error) {
+      throw new Error(error.message);
+    }
+    return;
+  }
+
+  if (env.SMTP_HOST) {
+    const transporter = createSmtpTransport(env);
+    await transporter.sendMail({
+      from: env.EMAIL_FROM,
+      to: opts.to,
+      subject: opts.subject,
+      text: opts.text,
+      html: opts.html,
+    });
+    return;
+  }
+
+  throw new Error("No email provider configured (set RESEND_API_KEY or SMTP_HOST)");
+}
+
 export type TenantInviteEmailInput = {
   to: string;
   inviteUrl: string;
@@ -26,8 +66,8 @@ export type TenantInviteEmailInput = {
 };
 
 /**
- * Sends the tenant invite email via Nodemailer when `SMTP_HOST` is set.
- * If `SMTP_HOST` is omitted, logs the invite URL (useful for local development).
+ * Sends tenant invite via Resend (preferred) or SMTP.
+ * If neither is configured, logs the invite URL (local dev).
  */
 export async function sendTenantInvitationEmail(input: TenantInviteEmailInput): Promise<void> {
   const env = loadEnv();
@@ -51,16 +91,13 @@ export async function sendTenantInvitationEmail(input: TenantInviteEmailInput): 
 <p>This link expires in ${env.INVITE_EXPIRES_DAYS} day(s).</p>
 <p>— TenantOS</p>`;
 
-  if (!env.SMTP_HOST) {
-    console.info(`[email] SMTP_HOST not set — not sending mail. Invite for ${input.to}:`);
+  if (!isEmailConfigured(env)) {
+    console.info(`[email] No RESEND_API_KEY or SMTP_HOST — not sending mail. Invite for ${input.to}:`);
     console.info(`  ${input.inviteUrl}`);
     return;
   }
 
-  const transporter = createSmtpTransport(env);
-
-  await transporter.sendMail({
-    from: env.EMAIL_FROM,
+  await sendTransactionalEmail(env, {
     to: input.to,
     subject,
     text,
@@ -92,15 +129,12 @@ export async function sendRentReminderEmail(input: RentReminderEmailInput): Prom
 <p>Please log in to TenantOS to review your lease and make a payment.</p>
 <p>— TenantOS</p>`;
 
-  if (!env.SMTP_HOST) {
-    console.info(`[email] SMTP_HOST not set — rent reminder not sent to ${input.to}`);
+  if (!isEmailConfigured(env)) {
+    console.info(`[email] No RESEND_API_KEY or SMTP_HOST — rent reminder not sent to ${input.to}`);
     return;
   }
 
-  const transporter = createSmtpTransport(env);
-
-  await transporter.sendMail({
-    from: env.EMAIL_FROM,
+  await sendTransactionalEmail(env, {
     to: input.to,
     subject,
     text,
@@ -131,16 +165,13 @@ export async function sendEmailVerificationEmail(input: EmailVerificationInput):
 <p>If you did not create an account, you can ignore this message.</p>
 <p>— TenantOS</p>`;
 
-  if (!env.SMTP_HOST) {
-    console.info(`[email] SMTP_HOST not set — verification link for ${input.to}:`);
+  if (!isEmailConfigured(env)) {
+    console.info(`[email] No RESEND_API_KEY or SMTP_HOST — verification link for ${input.to}:`);
     console.info(`  ${input.verifyUrl}`);
     return;
   }
 
-  const transporter = createSmtpTransport(env);
-
-  await transporter.sendMail({
-    from: env.EMAIL_FROM,
+  await sendTransactionalEmail(env, {
     to: input.to,
     subject,
     text,
@@ -171,16 +202,13 @@ export async function sendPasswordResetEmail(input: PasswordResetEmailInput): Pr
 <p>If you did not request a reset, ignore this email.</p>
 <p>— TenantOS</p>`;
 
-  if (!env.SMTP_HOST) {
-    console.info(`[email] SMTP_HOST not set — password reset link for ${input.to}:`);
+  if (!isEmailConfigured(env)) {
+    console.info(`[email] No RESEND_API_KEY or SMTP_HOST — password reset link for ${input.to}:`);
     console.info(`  ${input.resetUrl}`);
     return;
   }
 
-  const transporter = createSmtpTransport(env);
-
-  await transporter.sendMail({
-    from: env.EMAIL_FROM,
+  await sendTransactionalEmail(env, {
     to: input.to,
     subject,
     text,

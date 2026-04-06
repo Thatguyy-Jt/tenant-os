@@ -35,12 +35,29 @@ const envSchema = z.object({
       return Boolean(v);
     }, z.boolean())
     .default(false),
-  /** Base URL for invite links (no trailing slash), e.g. https://app.tenantos.com or http://localhost:5173 */
-  APP_PUBLIC_URL: z.string().url().default("http://localhost:5173"),
-  /** Browser origin for CORS (e.g. http://localhost:5173). If unset, cors allows any origin. */
-  FRONTEND_ORIGIN: z.string().url().optional(),
+  /** Base URL for invite links (no trailing slash). Defaults: prod → Vercel app, dev → localhost:5173 */
+  APP_PUBLIC_URL: z.preprocess(
+    (val) => {
+      if (typeof val === "string" && val.trim() !== "") return val.trim();
+      return process.env.NODE_ENV === "production"
+        ? "https://tenantos.vercel.app"
+        : "http://localhost:5173";
+    },
+    z.string().url()
+  ),
+  /** Browser origin for CORS. Defaults to Vercel app in production; if unset in dev, any origin is allowed. */
+  FRONTEND_ORIGIN: z.preprocess(
+    (val) => {
+      if (typeof val === "string" && val.trim() !== "") return val.trim();
+      if (process.env.NODE_ENV === "production") return "https://tenantos.vercel.app";
+      return undefined;
+    },
+    z.string().url().optional()
+  ),
   INVITE_EXPIRES_DAYS: z.coerce.number().positive().max(90).default(7),
-  /** If unset, invite emails are logged to the console instead of sent (local dev). */
+  /** Resend API key (HTTPS) — preferred on cloud hosts vs SMTP. https://resend.com/api-keys */
+  RESEND_API_KEY: optionalNonEmpty,
+  /** SMTP fallback when RESEND_API_KEY is unset (e.g. local dev). */
   SMTP_HOST: optionalNonEmpty,
   SMTP_PORT: z.coerce.number().positive().default(587),
   SMTP_SECURE: z

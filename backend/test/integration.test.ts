@@ -28,6 +28,7 @@ describe("TenantOS API integration", () => {
     process.env.INVITE_EXPIRES_DAYS = "7";
     process.env.PAYSTACK_SECRET_KEY = "sk_test_integration_secret_key_32chars!!";
     delete process.env.SMTP_HOST;
+    delete process.env.RESEND_API_KEY;
     resetEnvCache();
     await connectDatabase(process.env.MONGODB_URI!, "test");
     app = createApp();
