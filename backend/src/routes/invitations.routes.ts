@@ -284,3 +284,39 @@ invitationsRouter.post(
     });
   })
 );
+
+/** Revoke a pending invitation (not yet accepted). Landlord or agent with unit access. */
+invitationsRouter.delete(
+  "/:invitationId",
+  asyncHandler(async (req, res) => {
+    const orgId = requireObjectId(req.auth!.organizationId, "organizationId");
+    const auth = req.auth!;
+    const invitationId = requireObjectId(req.params.invitationId, "invitationId");
+
+    const invitation = await Invitation.findOne({
+      _id: invitationId,
+      organizationId: orgId,
+    });
+    if (!invitation) {
+      throw httpError(404, "Invitation not found", "NOT_FOUND");
+    }
+    if (invitation.consumedAt) {
+      throw httpError(409, "Cannot delete an invitation that was already accepted", "INVITE_CONSUMED");
+    }
+
+    const unit = await Unit.findOne({
+      _id: invitation.unitId,
+      organizationId: orgId,
+    });
+    if (!unit) {
+      throw httpError(404, "Unit not found", "NOT_FOUND");
+    }
+    if (auth.role === "agent") {
+      const scope = await getStaffPropertyScope(auth.userId, auth.role);
+      await assertPropertyInStaffScope(orgId, unit.propertyId as mongoose.Types.ObjectId, scope);
+    }
+
+    await Invitation.deleteOne({ _id: invitation._id, organizationId: orgId });
+    res.status(204).send();
+  })
+);

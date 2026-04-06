@@ -225,6 +225,21 @@ export async function createInvitation(body: {
   });
 }
 
+export async function deleteInvitation(invitationId: string): Promise<void> {
+  const res = await apiFetch(`/invitations/${encodeURIComponent(invitationId)}`, { method: "DELETE" });
+  if (!res.ok) {
+    const text = await res.text();
+    let message = res.statusText;
+    try {
+      const j = text ? (JSON.parse(text) as { error?: { message?: string } }) : null;
+      if (j?.error?.message) message = j.error.message;
+    } catch {
+      /* ignore */
+    }
+    throw new ApiError(message, res.status);
+  }
+}
+
 export async function listMaintenanceRequests(status?: string): Promise<MaintenanceRequestDto[]> {
   const q = status ? `?status=${encodeURIComponent(status)}` : "";
   const res = await apiJson<{ requests: MaintenanceRequestDto[] }>(`/maintenance-requests${q}`);

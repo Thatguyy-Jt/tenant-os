@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { ApiError } from "@/api/client";
-import { createInvitation, listInvitations, listProperties, listUnits } from "@/api/staffApi";
+import { createInvitation, deleteInvitation, listInvitations, listProperties, listUnits } from "@/api/staffApi";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
@@ -41,6 +41,13 @@ export function InvitationsPage() {
     },
     onError: (e: unknown) => {
       setFormError(e instanceof ApiError ? e.message : "Could not create invitation.");
+    },
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: deleteInvitation,
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["staff", "invitations"] });
     },
   });
 
@@ -204,19 +211,41 @@ export function InvitationsPage() {
         ) : (
           <ul className="mt-4 divide-y divide-border rounded-2xl border border-border">
             {invitationsQuery.data.map((i) => (
-              <li key={i.id} className="px-4 py-4">
-                <p className="font-medium">{i.email}</p>
-                <p className="text-sm text-muted-foreground">
-                  {formatMoney(i.rentAmount, i.currency)} / {i.billingFrequency} · starts {formatDate(i.startDate)}
-                  {i.endDate ? ` · ends ${formatDate(i.endDate)}` : ""}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Expires {formatDateTime(i.expiresAt)}
-                </p>
+              <li key={i.id} className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{i.email}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {formatMoney(i.rentAmount, i.currency)} / {i.billingFrequency} · starts {formatDate(i.startDate)}
+                    {i.endDate ? ` · ends ${formatDate(i.endDate)}` : ""}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Expires {formatDateTime(i.expiresAt)}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0 self-start sm:self-center"
+                  disabled={deleteMut.isPending}
+                  onClick={() => {
+                    if (!window.confirm(`Revoke invitation to ${i.email}? The link will stop working.`)) return;
+                    deleteMut.mutate(i.id);
+                  }}
+                >
+                  {deleteMut.isPending && deleteMut.variables === i.id ? "Revoking…" : "Revoke"}
+                </Button>
               </li>
             ))}
           </ul>
         )}
+        {deleteMut.isError ? (
+          <p className="mt-3 text-sm text-destructive">
+            {deleteMut.error instanceof ApiError
+              ? deleteMut.error.message
+              : "Could not revoke invitation."}
+          </p>
+        ) : null}
       </div>
     </div>
   );
