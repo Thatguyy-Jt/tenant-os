@@ -31,44 +31,160 @@
   --font-body: "DM Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* tenant-os (GitHub) design tokens — dark shell + teal primary */
-:root {
+/* ─── Midnight Teal (default) ─── dark shell + teal */
+:root,
+[data-theme="midnight-teal"] {
   --background: 216 28% 7%;
   --foreground: 210 40% 98%;
-
   --card: 215 25% 12%;
   --card-foreground: 210 40% 98%;
-
   --popover: 215 25% 12%;
   --popover-foreground: 210 40% 98%;
-
-  --primary: 162 72% 46%;
+  --primary: 174 72% 46%;
   --primary-foreground: 216 28% 7%;
-
   --secondary: 215 20% 18%;
   --secondary-foreground: 210 40% 98%;
-
   --muted: 215 20% 18%;
   --muted-foreground: 215 15% 55%;
-
-  --accent: 162 72% 46%;
+  --accent: 174 72% 46%;
   --accent-foreground: 216 28% 7%;
-
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 210 40% 98%;
-
   --border: 215 20% 20%;
   --input: 215 20% 20%;
-  --ring: 162 72% 46%;
-
+  --ring: 174 72% 46%;
   --radius: 0.75rem;
+  --hero-overlay: linear-gradient(135deg, hsla(216,28%,7%,0.92) 0%, hsla(216,28%,7%,0.7) 100%);
+  --gradient-accent: linear-gradient(135deg, hsl(174,72%,46%), hsl(184,66%,50%));
+  --chart-1: 174 72% 46%;
+  --chart-2: 190 60% 55%;
+  --chart-3: 162 55% 38%;
+  --chart-4: 200 65% 60%;
+  --chart-5: 142 50% 48%;
+}
 
-  --hero-overlay: linear-gradient(
-    135deg,
-    hsla(216, 28%, 7%, 0.92) 0%,
-    hsla(216, 28%, 7%, 0.7) 100%
-  );
-  --gradient-accent: linear-gradient(135deg, hsl(162, 72%, 46%), hsl(172, 66%, 50%));
+/* ─── Ocean Blue ─── deep dark + electric blue */
+[data-theme="ocean-blue"] {
+  --background: 220 35% 6%;
+  --foreground: 210 40% 97%;
+  --card: 220 30% 11%;
+  --card-foreground: 210 40% 97%;
+  --popover: 220 30% 11%;
+  --popover-foreground: 210 40% 97%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 220 35% 6%;
+  --secondary: 220 25% 17%;
+  --secondary-foreground: 210 40% 97%;
+  --muted: 220 25% 17%;
+  --muted-foreground: 220 15% 55%;
+  --accent: 217 91% 60%;
+  --accent-foreground: 220 35% 6%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 220 25% 20%;
+  --input: 220 25% 20%;
+  --ring: 217 91% 60%;
+  --radius: 0.75rem;
+  --hero-overlay: linear-gradient(135deg, hsla(220,35%,6%,0.92) 0%, hsla(220,35%,6%,0.7) 100%);
+  --gradient-accent: linear-gradient(135deg, hsl(217,91%,60%), hsl(200,85%,65%));
+  --chart-1: 217 91% 60%;
+  --chart-2: 199 80% 58%;
+  --chart-3: 232 70% 62%;
+  --chart-4: 180 65% 55%;
+  --chart-5: 245 60% 65%;
+}
+
+/* ─── Royal Purple ─── dark shell + violet */
+[data-theme="royal-purple"] {
+  --background: 265 30% 6%;
+  --foreground: 270 30% 97%;
+  --card: 265 25% 11%;
+  --card-foreground: 270 30% 97%;
+  --popover: 265 25% 11%;
+  --popover-foreground: 270 30% 97%;
+  --primary: 270 75% 65%;
+  --primary-foreground: 265 30% 6%;
+  --secondary: 265 22% 17%;
+  --secondary-foreground: 270 30% 97%;
+  --muted: 265 22% 17%;
+  --muted-foreground: 265 15% 55%;
+  --accent: 270 75% 65%;
+  --accent-foreground: 265 30% 6%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 265 22% 20%;
+  --input: 265 22% 20%;
+  --ring: 270 75% 65%;
+  --radius: 0.75rem;
+  --hero-overlay: linear-gradient(135deg, hsla(265,30%,6%,0.92) 0%, hsla(265,30%,6%,0.7) 100%);
+  --gradient-accent: linear-gradient(135deg, hsl(270,75%,65%), hsl(290,65%,68%));
+  --chart-1: 270 75% 65%;
+  --chart-2: 290 65% 60%;
+  --chart-3: 248 70% 62%;
+  --chart-4: 310 55% 58%;
+  --chart-5: 230 60% 65%;
+}
+
+/* ─── Ember ─── dark shell + amber/orange glow */
+[data-theme="ember"] {
+  --background: 20 30% 5%;
+  --foreground: 30 30% 97%;
+  --card: 20 25% 10%;
+  --card-foreground: 30 30% 97%;
+  --popover: 20 25% 10%;
+  --popover-foreground: 30 30% 97%;
+  --primary: 25 90% 58%;
+  --primary-foreground: 20 30% 5%;
+  --secondary: 20 22% 16%;
+  --secondary-foreground: 30 30% 97%;
+  --muted: 20 22% 16%;
+  --muted-foreground: 20 15% 55%;
+  --accent: 25 90% 58%;
+  --accent-foreground: 20 30% 5%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 20 22% 19%;
+  --input: 20 22% 19%;
+  --ring: 25 90% 58%;
+  --radius: 0.75rem;
+  --hero-overlay: linear-gradient(135deg, hsla(20,30%,5%,0.92) 0%, hsla(20,30%,5%,0.7) 100%);
+  --gradient-accent: linear-gradient(135deg, hsl(25,90%,58%), hsl(40,85%,58%));
+  --chart-1: 25 90% 58%;
+  --chart-2: 40 85% 55%;
+  --chart-3: 10 80% 55%;
+  --chart-4: 50 75% 52%;
+  --chart-5: 355 70% 58%;
+}
+
+/* ─── Arctic Light ─── clean light + indigo blue */
+[data-theme="arctic-light"] {
+  --background: 210 20% 98%;
+  --foreground: 218 30% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 218 30% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 218 30% 12%;
+  --primary: 221 83% 53%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 214 32% 91%;
+  --secondary-foreground: 218 30% 12%;
+  --muted: 214 32% 91%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 221 83% 53%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84.2% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 214 32% 88%;
+  --input: 214 32% 88%;
+  --ring: 221 83% 53%;
+  --radius: 0.75rem;
+  --hero-overlay: linear-gradient(135deg, hsla(218,30%,12%,0.80) 0%, hsla(218,30%,12%,0.55) 100%);
+  --gradient-accent: linear-gradient(135deg, hsl(221,83%,53%), hsl(200,85%,55%));
+  --chart-1: 221 83% 53%;
+  --chart-2: 200 80% 48%;
+  --chart-3: 245 70% 58%;
+  --chart-4: 175 65% 42%;
+  --chart-5: 262 60% 55%;
 }
 
 @layer base {

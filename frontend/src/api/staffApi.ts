@@ -1,5 +1,6 @@
 import { apiFetch, apiJson, ApiError } from "@/api/client";
 import type {
+  DashboardChartData,
   DashboardSummary,
   InvitationDto,
   LeaseBalanceDto,
@@ -14,6 +15,10 @@ import type {
 
 export async function getDashboardSummary(): Promise<DashboardSummary> {
   return apiJson<DashboardSummary>("/dashboard/summary");
+}
+
+export async function getDashboardCharts(): Promise<DashboardChartData> {
+  return apiJson<DashboardChartData>("/dashboard/charts");
 }
 
 export async function listProperties(): Promise<PropertyDto[]> {

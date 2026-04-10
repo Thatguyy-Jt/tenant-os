@@ -4,6 +4,7 @@ import { Menu, X } from "lucide-react";
 
 import logo from "@/assets/tenant-os-logo.png";
 import { Button } from "@/components/ui/button";
+import { ThemePicker } from "@/components/ThemePicker";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
@@ -37,6 +38,7 @@ const Navbar = () => {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
+          <ThemePicker />
           <Button variant="ghost" size="sm" className="text-muted-foreground" asChild>
             <Link to="/login">Log In</Link>
           </Button>
@@ -79,6 +81,10 @@ const Navbar = () => {
                 Get Started
               </Link>
             </Button>
+          </div>
+          <div className="flex items-center justify-between pt-1 border-t border-border/30">
+            <span className="text-xs text-muted-foreground">App theme</span>
+            <ThemePicker />
           </div>
         </div>
       )}

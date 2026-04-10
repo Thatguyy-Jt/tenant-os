@@ -1,5 +1,16 @@
 /** Shapes aligned with backend serializers (Mongo fields as ISO date strings in JSON). */
 
+export type DashboardChartData = {
+  monthlyRevenue: { month: string; revenue: number }[];
+  occupancyBreakdown: { name: string; value: number }[];
+  leaseHealth: { name: string; value: number }[];
+  rentCollectionSummary: {
+    totalAccrued: number;
+    totalPaid: number;
+    totalOutstanding: number;
+  };
+};
+
 export type DashboardSummary = {
   occupancy: {
     totalUnits: number;
