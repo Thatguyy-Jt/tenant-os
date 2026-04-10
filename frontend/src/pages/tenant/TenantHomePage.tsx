@@ -294,7 +294,6 @@ export function TenantHomePage() {
   const daysLeft = nextDue ? daysUntil(nextDue) : null;
 
   const primary = cssVar("--chart-1");
-  const secondary = cssVar("--chart-2");
   const muted = cssVar("--muted-foreground");
   const borderColor = cssVar("--border");
 
