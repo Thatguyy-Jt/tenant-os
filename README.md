@@ -4,7 +4,7 @@
 
 TenantOS is a full-stack property management platform that lets landlords track rent, manage tenants, handle maintenance requests, and analyse portfolio performance — all from a single dashboard. Tenants get their own portal to view their lease, pay rent online, submit maintenance tickets, and manage documents.
 
-**Live demo:** [tenant-os-ashen.vercel.app](https://tenant-os-ashen.vercel.app)  
+**Live demo:** [tenantos.vercel.app](https://tenantos.vercel.app)  
 **API:** Deployed on [Render](https://render.com) · **Frontend:** Deployed on [Vercel](https://vercel.com)
 
 ---
