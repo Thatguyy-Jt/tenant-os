@@ -99,11 +99,11 @@ const Features = () => {
           transition={{ duration: 0.6 }}
           className="mx-auto mb-20 max-w-2xl text-center"
         >
-          <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1 text-xs font-semibold uppercase tracking-widest text-primary">
+          <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-primary">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
             Platform Features
           </span>
-          <h2 className="mt-5 font-heading text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">
+          <h2 className="mt-5 font-heading text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
             Everything You Need to{" "}
             <span className="text-gradient">Run Your Rentals</span>
           </h2>
@@ -155,11 +155,6 @@ const Features = () => {
                 <p className="flex-1 text-sm leading-relaxed text-muted-foreground">
                   {f.desc}
                 </p>
-
-                {/* Arrow — appears on hover */}
-                <div className="mt-5 flex items-center gap-1.5 text-xs font-medium text-primary opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0.5">
-                  Learn more <ArrowRight size={12} />
-                </div>
 
                 {/* Bottom accent line */}
                 <div className="absolute bottom-0 left-0 h-0.5 w-0 rounded-full bg-gradient-to-r from-primary to-transparent transition-all duration-500 group-hover:w-full" />
