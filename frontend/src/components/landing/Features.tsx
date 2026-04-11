@@ -99,8 +99,7 @@ const Features = () => {
           transition={{ duration: 0.6 }}
           className="mx-auto mb-20 max-w-2xl text-center"
         >
-          <span className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-primary">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+          <span className="text-sm font-semibold uppercase tracking-widest text-primary">
             Platform Features
           </span>
           <h2 className="mt-5 font-heading text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
